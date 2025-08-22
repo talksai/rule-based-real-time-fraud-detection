@@ -1,24 +1,79 @@
-# Compiled class file
-*.class
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+out/
+# IntelliJ versioned configs (optional keep): .idea/codeStyles, .idea/runConfigurations
+# If you intentionally keep run configs, comment out .idea/ above and ignore subfiles instead.
 
-# Log file
+# Mac OS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Java build outputs
+target/
+build/
+bin/
+classes/
+logs/
 *.log
 
-# BlueJ files
-*.ctxt
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
 
-# Package Files #
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+.mvn/wrapper/maven-wrapperDownloader.java
+# Maven target already covered above
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# Annotation processors / generated sources
+generated/
+**/generated-sources/
+**/generated-tests/
+
+# Coverage & reports
+.coverage/
+coverage/
+*.ec
+*.ecx
+*.exec
+jacoco.exec
+*.lcov
+site/
+
+# Test results
+test-results/
+surefire-reports/
+failsafe-reports/
+
+# Packaging
 *.jar
 *.war
-*.nar
 *.ear
 *.zip
 *.tar.gz
-*.rar
+*.tar.bz2
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
+# Temporary files
+*.swp
+*.swo
+*~
+*.tmp
+*.bak
+
+# Local environment / tools
+.vscode/
+.idea_modules/
+.env
+.env.*
+*.local
+*.secret
+

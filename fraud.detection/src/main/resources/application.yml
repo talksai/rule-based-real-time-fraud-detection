@@ -1,0 +1,157 @@
+spring:
+  application:
+    name: fraud-detection
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: fraud-detection-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: latest
+      enable-auto-commit: false
+      max-poll-records: 500
+      fetch-max-wait: 500ms
+      buffer-memory: 33554432
+      request-timeout-ms: 3000
+      delivery-timeout-ms: 120000
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 2147483647
+      enable-idempotence: true
+      max-in-flight-requests-per-connection: 5
+      compression-type: snappy
+      batch-size: 16384
+      linger-ms: 5
+      buffer-memory: 33554432
+      request-timeout-ms: 3000
+      delivery-timeout-ms: 120000
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 100ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 8
+          min-idle: 2
+
+#server:
+#  port: ${SERVER_PORT:8081}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,circuitbreakers,circuitbreakerevents
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        fraud.detection.processing.time: true
+
+# Application Configuration
+app:
+  kafka:
+    topics:
+      input: ${KAFKA_TOPIC_INPUT:events.raw}
+      output: ${KAFKA_TOPIC_OUTPUT:fraud.alerts}
+      dlq: ${KAFKA_TOPIC_DLQ:events.raw.dlq}
+
+  fraud-rules:
+    velocity:
+      max-events-per-minute: ${VELOCITY_MAX_EVENTS:1}
+      max-amount-per-minute: ${VELOCITY_MAX_AMOUNT:500.0}
+    blacklist:
+      ip-cache-ttl-minutes: ${BLACKLIST_IP_TTL:60}
+      device-cache-ttl-minutes: ${BLACKLIST_DEVICE_TTL:60}
+    dynamic:
+      baseline-window-minutes: ${DYNAMIC_BASELINE_WINDOW:60}
+      anomaly-threshold-sigma: ${DYNAMIC_THRESHOLD_SIGMA:3.0}
+
+  processing:
+    max-concurrent-events: ${MAX_CONCURRENT_EVENTS:1000}
+    enrichment-timeout-ms: ${ENRICHMENT_TIMEOUT_MS:200}
+    idempotency-ttl-minutes: ${IDEMPOTENCY_TTL_MINUTES:1}
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      enrichmentService:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 100
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 200ms
+        permitted-number-of-calls-in-half-open-state: 10
+        wait-duration-in-open-state: 30s
+        automatic-transition-from-open-to-half-open-enabled: true
+      redisOperations:
+        sliding-window-type: TIME_BASED
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 100ms
+        permitted-number-of-calls-in-half-open-state: 5
+        wait-duration-in-open-state: 15s
+      kafkaProducer:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 50
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 300ms
+        permitted-number-of-calls-in-half-open-state: 10
+        wait-duration-in-open-state: 30s
+
+  retry:
+    instances:
+      enrichmentRetry:
+        max-attempts: 2
+        wait-duration: 100ms
+        exponential-backoff-multiplier: 2.0
+        retry-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+      redisRetry:
+        max-attempts: 2
+        wait-duration: 50ms
+      kafkaRetry:
+        max-attempts: 3
+        wait-duration: 100ms
+        exponential-backoff-multiplier: 2.0
+
+  bulkhead:
+    instances:
+      enrichmentBulkhead:
+        max-concurrent-calls: 100
+        max-wait-duration: 50ms
+      ruleProcessingBulkhead:
+        max-concurrent-calls: 500
+        max-wait-duration: 100ms
+
+  timelimiter:
+    instances:
+      enrichmentTimeout:
+        timeout-duration: 200ms
+        cancel-running-future: true
+      redisTimeout:
+        timeout-duration: 100ms
+        cancel-running-future: true
+
+logging:
+  level:
+    com.codewithsai.fraud.detection: INFO
+    org.springframework.kafka: INFO
+    org.apache.kafka: WARN
+    io.lettuce: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{correlationId:-}] %logger{36} - %msg%n"

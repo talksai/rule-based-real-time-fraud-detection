@@ -1,0 +1,136 @@
+spring:
+  application:
+    name: api-gateway
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      enable-idempotence: true
+      max-in-flight-requests-per-connection: 5
+      compression-type: snappy
+      batch-size: 16384
+      linger-ms: 5
+      buffer-memory: 33554432
+      request-timeout-ms: 3000
+      delivery-timeout-ms: 120000
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 100ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 8
+          min-idle: 2
+
+  webflux:
+    multipart:
+      max-in-memory-size: 1MB
+
+server:
+  port: ${SERVER_PORT:8080}
+  netty:
+    connection-timeout: 2s
+    idle-timeout: 30s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,circuitbreakers,circuitbreakerevents
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+# Application Configuration
+app:
+  kafka:
+    topics:
+      events-raw: events.raw
+  rate-limit:
+    max-requests-per-minute: ${RATE_LIMIT_MAX_REQUESTS:1000}
+    window-size-minutes: 1
+  validation:
+    max-timestamp-future-seconds: 10
+  correlation:
+    header-name: X-Correlation-ID
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      redisRateLimiter:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 50
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 100ms
+        permitted-number-of-calls-in-half-open-state: 10
+        wait-duration-in-open-state: 30s
+        automatic-transition-from-open-to-half-open-enabled: true
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.dao.QueryTimeoutException
+      kafkaProducer:
+        sliding-window-type: TIME_BASED
+        sliding-window-size: 60
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 300ms
+        permitted-number-of-calls-in-half-open-state: 10
+        wait-duration-in-open-state: 30s
+        automatic-transition-from-open-to-half-open-enabled: true
+
+  retry:
+    instances:
+      redisRetry:
+        max-attempts: 2
+        wait-duration: 50ms
+        exponential-backoff-multiplier: 2.0
+        retry-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.dao.QueryTimeoutException
+      kafkaRetry:
+        max-attempts: 3
+        wait-duration: 100ms
+        exponential-backoff-multiplier: 2.0
+        retry-exceptions:
+          - org.apache.kafka.common.errors.TimeoutException
+          - org.apache.kafka.common.errors.NetworkException
+
+  bulkhead:
+    instances:
+      kafkaBulkhead:
+        max-concurrent-calls: 100
+        max-wait-duration: 50ms
+
+  timelimiter:
+    instances:
+      redisTimeout:
+        timeout-duration: 100ms
+        cancel-running-future: true
+      kafkaTimeout:
+        timeout-duration: 300ms
+        cancel-running-future: true
+
+logging:
+  level:
+    com.codewithsai.api.gateway: INFO
+    org.springframework.kafka: INFO
+    org.apache.kafka: WARN
+    io.lettuce: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{correlationId:-}] %logger{36} - %msg%n"
