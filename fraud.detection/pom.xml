@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.codewithsai</groupId>
-	<artifactId>fraud.detection</artifactId>
+	<artifactId>fraud-detection</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Fraud Detection</name>
 	<description>Spring Boot project for Fraud Detection</description>
@@ -38,10 +38,10 @@
 	</dependencyManagement>
 	<dependencies>
 		<!-- Spring Boot WebFlux -->
-<!--		<dependency>-->
-<!--			<groupId>org.springframework.boot</groupId>-->
-<!--			<artifactId>spring-boot-starter-webflux</artifactId>-->
-<!--		</dependency>-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
 
 		<!-- Spring Boot Validation -->
 		<dependency>
