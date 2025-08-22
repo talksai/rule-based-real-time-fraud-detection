@@ -1,13 +1,13 @@
 #!/bin/bash
 
-echo "🚀 Starting End-to-End Test"
+echo "Starting End-to-End Test"
 
 # Wait for services to be ready
 echo "⏳ Waiting for services to start..."
 sleep 5
 
 # Test 1: Single normal event
-echo "📤 Sending normal event..."
+echo "Sending normal event..."
 curl -X POST http://localhost:8080/api/v1/events \
   -H "Content-Type: application/json" \
   -H "X-Correlation-ID: $(uuidgen)" \
@@ -42,7 +42,7 @@ for i in {1..7}; do
 done
 
 # Test 3: Trigger amount rule
-echo "📤 Sending high amount event..."
+echo "Sending high amount event..."
 curl -X POST http://localhost:8080/api/v1/events \
   -H "Content-Type: application/json" \
   -H "X-Correlation-ID: $(uuidgen)" \
@@ -58,4 +58,4 @@ curl -X POST http://localhost:8080/api/v1/events \
 
 sleep 3
 
-echo "✅ Test completed! Check the logs and Kafka UI at http://localhost:8090"
+echo "Test completed! Check the logs and Kafka UI at http://localhost:8090"
