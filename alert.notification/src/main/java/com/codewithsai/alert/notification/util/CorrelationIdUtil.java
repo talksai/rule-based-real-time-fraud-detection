@@ -1,5 +1,6 @@
-package com.codewithsai.fraud.detection.util;
+package com.codewithsai.alert.notification.util;
 
+import com.codewithsai.alert.notification.model.AlertRaised;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 import reactor.util.context.Context;

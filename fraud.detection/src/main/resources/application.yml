@@ -152,6 +152,5 @@ logging:
     com.codewithsai.fraud.detection: INFO
     org.springframework.kafka: INFO
     org.apache.kafka: WARN
-    io.lettuce: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{correlationId:-}] %logger{36} - %msg%n"
